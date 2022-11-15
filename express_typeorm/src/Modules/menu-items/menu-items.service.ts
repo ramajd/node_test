@@ -86,6 +86,17 @@ export class MenuItemsService {
   */
 
   async getMenuItems() {
-    throw new Error('TODO in task 3');
+    // throw new Error('TODO in task 3');
+    const allItems = await this.menuItemRepository.find();
+
+    const prepareItems = (allItems: MenuItem[], parentId: number | null) => {
+        const curItems = allItems.filter(item => item.parentId === parentId);
+        return curItems.map(item => {
+            const children = prepareItems(allItems, item.id);
+            item.children = children;
+            return item;
+        });        
+    }
+    return prepareItems(allItems, null);
   }
 }
