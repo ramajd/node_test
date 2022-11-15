@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
 import App from "../../app";
 import { Workshop } from './entities/workshop.entity';
@@ -6,9 +6,11 @@ import { Workshop } from './entities/workshop.entity';
 
 export class EventsService {
   private eventRepository: Repository<Event>;
+  private workshopRepository: Repository<Workshop>;
 
   constructor(app: App) {
     this.eventRepository = app.getDataSource().getRepository(Event);
+    this.workshopRepository = app.getDataSource().getRepository(Workshop);
   }
 
   async getWarmupEvents() {
@@ -167,6 +169,24 @@ export class EventsService {
     ```
      */
   async getFutureEventWithWorkshops() {
-    throw new Error('TODO task 2');
+    // const now = new Date();
+    const now = Date.now();
+    const eventIds = await this.workshopRepository.find({
+      where: {
+        start: MoreThan(now),
+      },
+      select: {
+        eventId: true,
+      },
+    });
+
+    const data = await this.eventRepository
+      .createQueryBuilder()
+      .leftJoinAndSelect(Workshop, "workshops", "workshops.eventId = event.id")
+      .where("event.id IN (:...eventIds)", { eventIds })
+      .orderBy("workshops.start")
+      .getMany();
+    // console.log({data});
+    return data;
   }
 }
