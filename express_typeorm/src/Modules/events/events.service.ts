@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
 import App from "../../app";
+import { Workshop } from './entities/workshop.entity';
 
 
 export class EventsService {
@@ -92,7 +93,11 @@ export class EventsService {
      */
 
   async getEventsWithWorkshops() {
-    throw new Error('TODO task 1');
+    const data = await this.eventRepository.createQueryBuilder()
+      .leftJoinAndSelect(Workshop, 'workshops', 'workshops.eventId = event.id')
+      .getMany();
+    // console.log({data});
+    return data;    
   }
 
   /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
